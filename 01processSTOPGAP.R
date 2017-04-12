@@ -37,5 +37,5 @@ stopgap <- merge(stopgap, zooma, by.x = "msh", by.y = "mesh.term", all = FALSE)
 
 # tidy
 stopgap[, efo.id := sub(".+\\/([A-Za-z]+_[0-9]+)", "\\1", efo.url)]
-stopgap <- stopgap[, .(ensembl.id = GENEID, gene.symbol = gene.v19, efo.id, efo.term, score, pvalue, gene.score, gene.rank = gene.rank.min)]
+stopgap <- stopgap[, .(ensembl.id = GENEID, gene.symbol = gene.v19, efo.id, efo.term, stopgap.score = score, stopgap.pvalue = pvalue, stopgap.gene.score = gene.score, stopgap.gene.rank = gene.rank.min)]
 fwrite(stopgap, "../dat/stopgap.tsv", sep = "\t")

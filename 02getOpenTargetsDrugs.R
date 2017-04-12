@@ -17,5 +17,7 @@ opentargets  <- foreach(i = seq(efo.ids), .combine = rbind) %dopar% {
         tmp[, c("efo.id", "chembl.id") := .(efo.ids[i], sub("http://identifiers.org/chembl.compound/", "", id))]
     }
 }
-opentargets <- opentargets[!sapply(opentargets, is.null)]
+
+# tidy
+opentargets <- opentargets[, .(chembl.id, chembl.name = molecule_name, chembl.type = molecule_type, phase = max_phase_for_all_diseases.numeric_index, efo.id)]
 fwrite(opentargets, "../dat/opentargets.tsv", sep = "\t")
