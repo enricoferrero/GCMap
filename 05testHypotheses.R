@@ -3,6 +3,7 @@ library(foreach)
 library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 library(BiocParallel)
+register(MulticoreParam(workers = 1))
 library(fgsea)
 
 # function to calculate enrichment
@@ -38,15 +39,16 @@ fisher.drugs <- foreach (i = seq(opentargets.list), .combine = rbind) %dopar% {
 }
 
 # correct p-values
+fisher.drugs <- fisher.drugs[order(p.value), ]
 fisher.drugs[, padj := p.adjust(p.value, method = "fdr")]
 
 # check results 
-fisher.drugs[, sum(padj < 0.05) / .N * 100]
+fisher.drugs[, sum(padj < 0.05) / .N]
 fisher.drugs[padj < 0.05, ]
 
 # export
 fisher.drugs <- fisher.drugs[padj < 0.05, ]
-fwrite(fisher.drugs, "../dat/fisher.drugs.txv", sep = "\t")
+fwrite(fisher.drugs, "../dat/fisher.drugs.tsv", sep = "\t")
 
 
 ## hypothesis 2: for each disease, check if the overlap between genes differentially expressed after drug treatment and genes genetically associated with the disease is significant
@@ -87,12 +89,13 @@ gsea.genes <- foreach (i = seq(lincs.list), .combine = rbind) %dopar% {
 }
 
 # correct p-values
+gsea.genes <- gsea.genes[order(pval), ]
 gsea.genes[, padj := p.adjust(pval, method = "fdr")]
 
 # check results 
-gsea.genes[, sum(padj < 0.05) / .N * 100]
+gsea.genes[, sum(padj < 0.05) / .N]
 gsea.genes[padj < 0.05, ]
 
 # export
 gsea.genes <- gsea.genes[padj < 0.05, ]
-fwrite(gsea.genes, "../dat/gsea.genes.txv", sep = "\t")
+fwrite(gsea.genes, "../dat/gsea.genes.tsv", sep = "\t")
