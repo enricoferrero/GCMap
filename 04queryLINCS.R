@@ -7,7 +7,7 @@ registerDoParallel(parallel::detectCores() - 1)
 
 # L1000CDS2 API configuration
 lincs.url <- "http://amp.pharm.mssm.edu/L1000CDS2/query"
-lincs.config <- list(aggravate = FALSE, searchMethod = "CD", share = FALSE, combination = FALSE, `db-version` = "latest")
+lincs.config <- list(aggravate = TRUE, searchMethod = "CD", share = FALSE, combination = FALSE, `db-version` = "latest")
 
 # UniChem API configuration
 unichem.url <- "https://www.ebi.ac.uk/unichem/rest/src_compound_id/"
@@ -21,7 +21,7 @@ lincs <- foreach(i = seq(names(stopgap.list)), .combine = rbind) %dopar% {
     
     # create genetic signature
     genes <- stopgap.list[[i]][, gene.symbol]
-    vals <- stopgap.list[[i]][, stopgap.list.score]
+    vals <- stopgap.list[[i]][, stopgap.score]
 
     # query the L1000CDS2 API
     lincs.body <- list(data = list(genes = genes, vals = vals), config = lincs.config)
