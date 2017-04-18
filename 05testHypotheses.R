@@ -29,7 +29,7 @@ for (search.mode in c("reverse", "mimic")) {
     stopgap <- fread("../dat/stopgap.tsv")
     opentargets <- fread("../dat/opentargets.tsv")
     harmonizome <- fread("../dat/harmonizome.tsv")
-    lincs <- fread(paste0("../dat/lincs."search.mode, ".tsv"))
+    lincs <- fread(paste0("../dat/lincs.", search.mode, ".tsv"))
 
     ## hypothesis 1: for each disease, check if the overlap between drugs predicted to reverse the genetic signature and drugs currently used to treat the disease is significant
 
