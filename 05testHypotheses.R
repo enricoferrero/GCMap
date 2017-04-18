@@ -16,86 +16,97 @@ checkOverlapSignificance <- function(set1, set2, universe) {
     data.table(set1 = length(set1), set2 = length(set2), overlap = a, universe = length(universe), odds.ratio = fisher$estimate, p.value = fisher$p.value)
 }
 
-# read datasets
-stopgap <- fread("../dat/stopgap.tsv")
-opentargets <- fread("../dat/opentargets.tsv")
-harmonizome <- fread("../dat/harmonizome.tsv")
-lincs <- fread("../dat/lincs.tsv")
+# reverse and mimic
+for (search.mode in c("reverse", "mimic")) {
 
-## hypothesis 1: for each disease, check if the overlap between drugs predicted to reverse the genetic signature and drugs currently used to treat the disease is significant
+    if (search.mode == "reverse") {
+        aggravate.value <- FALSE
+    } else if (search.mode == "mimic") {
+        aggravate.value <- TRUE
+    }
 
-# split by disease
-opentargets.list <- split(opentargets, opentargets$efo.id)
-lincs.list <- split(lincs, lincs$efo.id)
+    # read datasets
+    stopgap <- fread("../dat/stopgap.tsv")
+    opentargets <- fread("../dat/opentargets.tsv")
+    harmonizome <- fread("../dat/harmonizome.tsv")
+    lincs <- fread(paste0("../dat/lincs."search.mode, ".tsv"))
 
-# create universe of compounds
-chembl <- unique(c(opentargets$chembl.id, lincs$chembl.id))
+    ## hypothesis 1: for each disease, check if the overlap between drugs predicted to reverse the genetic signature and drugs currently used to treat the disease is significant
 
-# perform Fisher's test
-fisher.drugs <- foreach (i = seq(opentargets.list), .combine = rbind) %dopar% {
-    efo.id <- names(opentargets.list)[i]
-    fisher.drugs <- checkOverlapSignificance(opentargets.list[[efo.id]]$chembl.id, lincs.list[[efo.id]]$chembl.id, chembl)
-    cbind(efo.id, fisher.drugs)
-}
+    # split by disease
+    opentargets.list <- split(opentargets, opentargets$efo.id)
+    lincs.list <- split(lincs, lincs$efo.id)
 
-# correct p-values
-fisher.drugs <- fisher.drugs[order(p.value), ]
-fisher.drugs[, padj := p.adjust(p.value, method = "fdr")]
+    # create universe of compounds
+    chembl <- unique(c(opentargets$chembl.id, lincs$chembl.id))
 
-# check results 
-fisher.drugs[, sum(padj < 0.05) / .N]
-fisher.drugs[padj < 0.05, ]
+    # perform Fisher's test
+    fisher.drugs <- foreach (i = seq(opentargets.list), .combine = rbind) %dopar% {
+        efo.id <- names(opentargets.list)[i]
+        fisher.drugs <- checkOverlapSignificance(opentargets.list[[efo.id]]$chembl.id, lincs.list[[efo.id]]$chembl.id, chembl)
+        cbind(efo.id, fisher.drugs)
+    }
 
-# export
-fisher.drugs <- fisher.drugs[padj < 0.05, ]
-fwrite(fisher.drugs, "../dat/fisher.drugs.tsv", sep = "\t")
+    # correct p-values
+    fisher.drugs <- fisher.drugs[order(p.value), ]
+    fisher.drugs[, padj := p.adjust(p.value, method = "fdr")]
+
+    # check results 
+    fisher.drugs[, sum(padj < 0.05) / .N]
+    fisher.drugs[padj < 0.05, ]
+
+    # export
+    fisher.drugs <- fisher.drugs[padj < 0.05, ]
+    fwrite(fisher.drugs, paste0("../dat/fisher.drugs.", search.mode, ".tsv"), sep = "\t")
 
 
-## hypothesis 2: for each disease, check if the overlap between genes differentially expressed after drug treatment and genes genetically associated with the disease is significant
+    ## hypothesis 2: for each disease, check if the overlap between genes differentially expressed after drug treatment and genes genetically associated with the disease is significant
 
-# add perturbation string to LINCS data to match it with the (adapted) Harmonizome data
-lincs[, perturbation := tolower(paste(lincs.id, lincs.name, lincs.cell, lincs.time, lincs.time.unit, lincs.dose, lincs.dose.unit, sep = "_"))]
-harmonizome[, perturbation := tolower(gsub("_([1-9]*[0-9])\\.0_", "_\\1_", perturbation))]
+    # add perturbation string to LINCS data to match it with the (adapted) Harmonizome data
+    lincs[, perturbation := tolower(paste(lincs.id, lincs.name, lincs.cell, lincs.time, lincs.time.unit, lincs.dose, lincs.dose.unit, sep = "_"))]
+    harmonizome[, perturbation := tolower(gsub("_([1-9]*[0-9])\\.0_", "_\\1_", perturbation))]
 
-# split by disease
-lincs.list <- split(lincs, lincs$efo.id)
-stopgap.list <- split(stopgap$ensembl.id, stopgap$efo.id)
+    # split by disease
+    lincs.list <- split(lincs, lincs$efo.id)
+    stopgap.list <- split(stopgap$ensembl.id, stopgap$efo.id)
 
-# loop thorugh diseases
-gsea.genes <- foreach (i = seq(lincs.list), .combine = rbind) %dopar% {
-    
-    # pick a disease
-    efo.id <- names(lincs.list)[i]
-    stopgap.efo.id <- stopgap.list[efo.id]
+    # loop thorugh diseases
+    gsea.genes <- foreach (i = seq(lincs.list), .combine = rbind) %dopar% {
+        
+        # pick a disease
+        efo.id <- names(lincs.list)[i]
+        stopgap.efo.id <- stopgap.list[efo.id]
 
-    # loop thorugh compounds
-    foreach (j = seq(nrow(lincs.list[[efo.id]])), .combine = rbind) %dopar% {
+        # loop thorugh compounds
+        foreach (j = seq(nrow(lincs.list[[efo.id]])), .combine = rbind) %dopar% {
 
-        # get gene list
-        tmp <- harmonizome[grep(lincs.list[[efo.id]][j, perturbation], perturbation, fixed = TRUE), ]
-        genes <- tmp[, direction]
-        names(genes) <- tmp[, ensembl.id]
+            # get gene list
+            tmp <- harmonizome[grep(lincs.list[[efo.id]][j, perturbation], perturbation, fixed = TRUE), ]
+            genes <- tmp[, direction]
+            names(genes) <- tmp[, ensembl.id]
 
-        # perform GSEA
-        gsea.genes <- fgsea(pathways = stopgap.efo.id, stats = genes, minSize = 5, maxSize = 1000, nperm = 10000)
-        # annotate
-        if (nrow(gsea.genes) > 0) {
-            gsea.genes <- cbind(gsea.genes, lincs.list[[efo.id]][j, .(chembl.id, lincs.score, lincs.id, lincs.name, lincs.cell, lincs.dose, lincs.dose.unit, lincs.time, lincs.time.unit)])
-            gsea.genes <- merge(unique(stopgap[, .(efo.id, efo.term)]), gsea.genes, by.x = "efo.id", by.y = "pathway")
+            # perform GSEA
+            gsea.genes <- fgsea(pathways = stopgap.efo.id, stats = genes, minSize = 5, maxSize = 1000, nperm = 10000)
+            # annotate
+            if (nrow(gsea.genes) > 0) {
+                gsea.genes <- cbind(gsea.genes, lincs.list[[efo.id]][j, .(chembl.id, lincs.score, lincs.id, lincs.name, lincs.cell, lincs.dose, lincs.dose.unit, lincs.time, lincs.time.unit)])
+                gsea.genes <- merge(unique(stopgap[, .(efo.id, efo.term)]), gsea.genes, by.x = "efo.id", by.y = "pathway")
+            }
+
         }
 
     }
 
+    # correct p-values
+    gsea.genes <- gsea.genes[order(pval), ]
+    gsea.genes[, padj := p.adjust(pval, method = "fdr")]
+
+    # check results 
+    gsea.genes[, sum(padj < 0.05) / .N]
+    gsea.genes[padj < 0.05, ]
+
+    # export
+    gsea.genes <- gsea.genes[padj < 0.05, ]
+    fwrite(gsea.genes, paste0("../dat/gsea.genes.", search.mode, ".tsv"), sep = "\t")
+
 }
-
-# correct p-values
-gsea.genes <- gsea.genes[order(pval), ]
-gsea.genes[, padj := p.adjust(pval, method = "fdr")]
-
-# check results 
-gsea.genes[, sum(padj < 0.05) / .N]
-gsea.genes[padj < 0.05, ]
-
-# export
-gsea.genes <- gsea.genes[padj < 0.05, ]
-fwrite(gsea.genes, "../dat/gsea.genes.tsv", sep = "\t")
