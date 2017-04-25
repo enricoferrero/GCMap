@@ -1,3 +1,4 @@
+set.seed(16, kind = "L'Ecuyer-CMRG")
 library(data.table)
 library(foreach)
 library(doParallel)
@@ -88,9 +89,10 @@ for (search.mode in c("reverse", "mimic")) {
             # perform GSEA
             gsea.genes <- fgsea(pathways = stopgap.efo.id, stats = genes, minSize = 5, maxSize = 1000, nperm = 10000)
             # annotate
+            gsea.genes <- gsea.genes[, .(efo.id = pathway, gsea.pval = pval, gsea.padj = padj, gsea.es = ES, gsea.nes = NES, gsea.n.more.extreme = nMoreExtreme, gsea.size = size)]
             if (nrow(gsea.genes) > 0) {
                 gsea.genes <- cbind(gsea.genes, lincs.list[[efo.id]][j, .(chembl.id, lincs.score, lincs.id, lincs.name, lincs.cell, lincs.dose, lincs.dose.unit, lincs.time, lincs.time.unit)])
-                gsea.genes <- merge(unique(stopgap[, .(efo.id, efo.term)]), gsea.genes, by.x = "efo.id", by.y = "pathway")
+                gsea.genes <- merge(unique(stopgap[, .(efo.id, efo.term)]), gsea.genes, by = "efo.id")
             }
 
         }
@@ -98,15 +100,15 @@ for (search.mode in c("reverse", "mimic")) {
     }
 
     # correct p-values
-    gsea.genes <- gsea.genes[order(pval), ]
-    gsea.genes[, padj := p.adjust(pval, method = "fdr")]
+    gsea.genes <- gsea.genes[order(gsea.pval), ]
+    gsea.genes[, gsea.padj := p.adjust(gsea.pval, method = "fdr")]
 
     # check results 
-    gsea.genes[, sum(padj < 0.05) / .N]
-    gsea.genes[padj < 0.05, ]
+    gsea.genes[, sum(gsea.padj < 0.05) / .N]
+    gsea.genes[gsea.padj < 0.05, ]
 
     # export
-    gsea.genes <- gsea.genes[padj < 0.05, ]
+    gsea.genes <- gsea.genes[gsea.padj < 0.05, ]
     fwrite(gsea.genes, paste0("../dat/gsea.genes.", search.mode, ".tsv"), sep = "\t")
 
 }
