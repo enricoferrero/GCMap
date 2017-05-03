@@ -9,6 +9,8 @@ library(fgsea)
 
 # function to calculate enrichment
 checkOverlapSignificance <- function(set1, set2, universe) {
+    set1 <- unique(set1)
+    set2 <- unique(set2)
     a <- sum(set1 %in% set2)
     b <- length(set1) - a
     c <- length(set2) - a
