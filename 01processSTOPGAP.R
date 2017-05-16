@@ -35,6 +35,9 @@ zooma <- fread("../dat/zooma.cleaned.results.tsv")
 # merge
 stopgap <- merge(stopgap, zooma, by.x = "msh", by.y = "mesh.term", all = FALSE)
 
+# filter
+stopgap <- stopgap[gene.rank.min <= 3 & gene.score > 0]
+
 # tidy
 stopgap[, efo.id := sub(".+\\/([A-Za-z]+_[0-9]+)", "\\1", efo.url)]
 stopgap <- stopgap[, .(ensembl.id = GENEID, gene.symbol = gene.v19, efo.id, efo.term, stopgap.score = score, stopgap.pvalue = pvalue, stopgap.gene.score = gene.score, stopgap.gene.rank = gene.rank.min)]
