@@ -72,6 +72,10 @@ fisher.genes[, p.adjusted := p.adjust(p.value, method = "fdr")]
 # add dummy variable
 fisher.genes[, same.disease := ifelse(efo.id.opentargets.degs == efo.id.stopgap, TRUE, FALSE)]
 
+# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, -log10(p.adjusted)], y = fisher.genes[same.disease == TRUE, -log10(p.adjusted)])
+print(mw.res)
+print(mw.res$p.value)
 # plot adjusted p-value distributions
 png("../dat/fisher.genes.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
 print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
@@ -80,19 +84,17 @@ print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
     xlab("Same disease") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(14) +
-    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")))
+    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
+    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
-# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
-mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, -log10(p.adjusted)], y = fisher.genes[same.disease == TRUE, -log10(p.adjusted)])
-print(mw.res)
-print(mw.res$p.value)
 
 # perform ROC analysis
 resp <- as.numeric(fisher.genes[, same.disease])
 pred <- ifelse(fisher.genes[, p.adjusted] < 0.05, 1, 0)
 roc.res <- roc(response = resp, predictor = pred)
 print(roc.res$auc)
+# plot ROC
 png("../dat/fisher.genes.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 plot(roc.res, main = paste("AUC:", round(roc.res$auc, 2)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, identity.lty = 2)
 dev.off()
@@ -186,6 +188,10 @@ fisher.drugs[p.value == 0, p.value := 3e-324]
 fisher.drugs <- fisher.drugs[order(p.value), ]
 fisher.drugs[, p.adjusted := p.adjust(p.value, method = "fdr")]
 
+# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, -log10(p.adjusted)], y = fisher.drugs[existing.indication == TRUE, -log10(p.adjusted)])
+print(mw.res)
+print(mw.res$p.value)
 # plot adjusted p-value distributions
 png("../dat/fisher.drugs.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
 print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted))) +
@@ -194,19 +200,16 @@ print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted)))
     xlab("Existing indication") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(14) +
-    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")))
+    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
+    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
-
-# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
-mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, -log10(p.adjusted)], y = fisher.drugs[existing.indication == TRUE, -log10(p.adjusted)])
-print(mw.res)
-print(mw.res$p.value)
 
 # perform ROC analysis
 resp <- as.numeric(fisher.drugs[, existing.indication])
 pred <- ifelse(fisher.drugs[, p.adjusted] < 0.05, 1, 0)
 roc.res <- roc(response = resp, predictor = pred)
 print(roc.res$auc)
+# plot
 png("../dat/fisher.drugs.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 plot(roc.res, main = paste("AUC:", round(roc.res$auc, 2)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, identity.lty = 2)
 dev.off()
