@@ -152,7 +152,7 @@ dev.off()
 
 # perform ROC/PR analysis
 preds <- ifelse(fisher.drugs[, p.adjusted] < 0.05, 1, 0)
-labls <- as.numeric(fisher.drugs[, existing.condition])
+labls <- as.numeric(fisher.drugs[, existing.indication])
 pred.obj <- prediction(predictions = preds, labels = labls)
 # ROC
 roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
