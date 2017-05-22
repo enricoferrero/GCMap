@@ -5,6 +5,10 @@ library(foreach)
 library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 
+# options
+min.drugs.score <- 0.5
+min.degs.score <- 0.2
+
 # read STOPGAP data to get EFO IDs for diseases
 stopgap <- fread("../dat/stopgap.tsv")
 
@@ -20,12 +24,12 @@ efo.ids <- unique(stopgap[, efo.id])
 opentargets.drugs  <- foreach(i = seq(efo.ids), .combine = rbind) %dopar% {
 
     # query API
-    tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "known_drug", scorevalue_min = 0.2, size = 10000), add_headers(`Auth-Token` = token))
+    tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "known_drug", scorevalue_min = min.drugs.score, size = 10000), add_headers(`Auth-Token` = token))
 
     # check response and request new token if necessary
     if (tmp$status_code == 419) {
         token <- content(GET("https://www.targetvalidation.org/api/latest/public/auth/request_token", query = list(app_name = "personal", secret = "8r88SQNM2A2nayCd47rSWVTh7x5DSw47")))$token
-        tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "known_drug", scorevalue_min = 0.2, size = 10000), add_headers(`Auth-Token` = token))
+        tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "known_drug", scorevalue_min = min.drugs.score, size = 10000), add_headers(`Auth-Token` = token))
     }
 
     # extract and check data
@@ -45,12 +49,12 @@ fwrite(opentargets.drugs, "../dat/opentargets.drugs.tsv", sep = "\t")
 opentargets.degs <- foreach(i = seq(efo.ids), .combine = rbind) %dopar% {
     
     # query API
-    tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "rna_expression", scorevalue_min = 0.2, size = 10000), add_headers(`Auth-Token` = token))
+    tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "rna_expression", scorevalue_min = min.degs.score, size = 10000), add_headers(`Auth-Token` = token))
 
     # check response and request new token if necessary
     if (tmp$status_code == 419) {
         token <- content(GET("https://www.targetvalidation.org/api/latest/public/auth/request_token", query = list(app_name = "personal", secret = "8r88SQNM2A2nayCd47rSWVTh7x5DSw47")))$token
-        tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "rna_expression", scorevalue_min = 0.2, size = 10000), add_headers(`Auth-Token` = token))
+        tmp <- GET("https://www.targetvalidation.org/api/latest/public/evidence/filter", query = list(disease = efo.ids[i], datatype = "rna_expression", scorevalue_min = min.degs.score, size = 10000), add_headers(`Auth-Token` = token))
     }
 
     # extract and check data
