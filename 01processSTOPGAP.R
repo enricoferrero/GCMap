@@ -7,13 +7,19 @@ library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 
 # options
-min.gene.score <- 1
+## permissive
+#max.gene.rank.min <- Inf
+#min.gene.score <- -Inf
+#sources.to.exclude <- c("OMIM", "Orphanet")
+# strict
 max.gene.rank.min <- 3
+min.gene.score <- 1
+sources.to.exclude <- c("OMIM", "Orphanet")
 
 # read data in
 stopgap <- fread("../dat/stopgap.gene.mesh.txt")
-# exclude rare disease (OMIM) evidence and keep relevant columns
-stopgap <- unique(stopgap[source %in% c("nhgri", "gwasdb", "grasp", "paper"), .(gene.v19, msh, pvalue, gene.score, gene.rank.min)])
+# keep relevant columns
+stopgap <- unique(stopgap[, .(gene.v19, msh, pvalue, gene.score, gene.rank.min, source)])
 # replace p-values of zero with arbitrarily low p-value
 stopgap[pvalue == 0, pvalue := 3e-324]
 
@@ -34,7 +40,7 @@ zooma <- foreach(i = seq(mesh.terms), .combine = rbind) %dopar% {
 # merge
 stopgap <- merge(stopgap, zooma, by.x = "msh", by.y = "mesh.term", all = FALSE)
 # filter
-stopgap <- stopgap[gene.rank.min <= max.gene.rank.min & gene.score > min.gene.score]
+stopgap <- stopgap[gene.rank.min <= max.gene.rank.min & gene.score > min.gene.score & !(source %in% sources.to.exclude), ]
 # tidy
 stopgap[, efo.id := sub(".+\\/([A-Za-z]+_[0-9]+)", "\\1", efo.url)]
 stopgap <- stopgap[, .(ensembl.id = GENEID, gene.symbol = gene.v19, efo.id, efo.term, stopgap.pvalue = pvalue, stopgap.gene.score = gene.score, stopgap.gene.rank = gene.rank.min)]

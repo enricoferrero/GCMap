@@ -72,7 +72,7 @@ print(mw.res$p.value)
 png("../dat/fisher.genes.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
 print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
     geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.020, 0.980))) +
+    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.025, 0.975))) +
     xlab("Same disease") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(14) +
@@ -142,7 +142,7 @@ print(mw.res$p.value)
 png("../dat/fisher.drugs.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
 print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted))) +
     geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.020, 0.980))) +
+    coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.025, 0.975))) +
     xlab("Existing indication") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(14) +
