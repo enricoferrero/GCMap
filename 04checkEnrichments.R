@@ -69,33 +69,32 @@ mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, -log10(p.adjusted)
 print(mw.res)
 print(mw.res$p.value)
 # plot adjusted p-value distributions
-png("../dat/fisher.genes.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
+png("../dat/fisher.genes.boxplots.png", width = 8 * 150, height = 6 * 150, res = 150)
 print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
     geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.025, 0.975))) +
+    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.03, 0.97))) +
     xlab("Same disease") +
     ylab("-log10(adjusted p-value)") +
-    theme_bw(14) +
+    theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
     ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
 # perform ROC/PR analysis
-preds <- ifelse(fisher.genes[, p.adjusted] < 0.05, 1, 0)
+preds <- fisher.genes[, -log10(p.adjusted)]
 labls <- as.numeric(fisher.genes[, same.disease])
 pred.obj <- prediction(predictions = preds, labels = labls)
 # ROC
 roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.genes.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2)
+plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR
 pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
-f1.res <- performance(pred.obj, measure = "f")
 png("../dat/fisher.genes.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(pr.res, main = paste("F1:", round(f1.res@y.values[[1]][2], 3)), xlab = "Recall", ylab = "Precision", col = "firebrick", lwd = 2)
+plot(pr.res, xlab = "Recall", ylab = "Precision", col = "dodgerblue4", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex = 1.5, pty = "s")
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 
@@ -139,33 +138,32 @@ mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, -log10(p.ad
 print(mw.res)
 print(mw.res$p.value)
 # plot adjusted p-value distributions
-png("../dat/fisher.drugs.boxplots.png", width = 10 * 150, height = 5 * 150, res = 150)
+png("../dat/fisher.drugs.boxplots.png", width = 8 * 150, height = 6 * 150, res = 150)
 print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted))) +
     geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.025, 0.975))) +
+    coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.06, 0.94))) +
     xlab("Existing indication") +
     ylab("-log10(adjusted p-value)") +
-    theme_bw(14) +
+    theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
     ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
 # perform ROC/PR analysis
-preds <- ifelse(fisher.drugs[, p.adjusted] < 0.05, 1, 0)
+preds <- fisher.drugs[, -log10(p.adjusted)]
 labls <- as.numeric(fisher.drugs[, existing.indication])
 pred.obj <- prediction(predictions = preds, labels = labls)
 # ROC
 roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.drugs.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2)
+plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR
 pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
-f1.res <- performance(pred.obj, measure = "f")
 png("../dat/fisher.drugs.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(pr.res, main = paste("F1:", round(f1.res@y.values[[1]][2], 3)), xlab = "Recall", ylab = "Precision", col = "firebrick", lwd = 2)
+plot(pr.res, xlab = "Recall", ylab = "Precision", col = "dodgerblue4", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 
