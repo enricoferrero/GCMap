@@ -72,7 +72,7 @@ print(mw.res$p.value)
 png("../dat/fisher.genes.boxplots.png", width = 8 * 150, height = 6 * 150, res = 150)
 print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
     geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.03, 0.97))) +
+    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.05, 0.95))) +
     xlab("Same disease") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(18) +
