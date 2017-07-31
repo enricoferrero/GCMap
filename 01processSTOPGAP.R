@@ -7,14 +7,14 @@ library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 
 # options
-## permissive
-#max.gene.rank.min <- Inf
-#min.gene.score <- -Inf
-#sources.to.exclude <- c("OMIM", "Orphanet")
-# strict
-max.gene.rank.min <- 3
-min.gene.score <- 1
+# permissive
+max.gene.rank.min <- Inf
+min.gene.score <- -Inf
 sources.to.exclude <- c("OMIM", "Orphanet")
+## strict
+#max.gene.rank.min <- 3
+#min.gene.score <- 1
+#sources.to.exclude <- c("OMIM", "Orphanet")
 
 # read data in
 stopgap <- fread("../dat/stopgap.gene.mesh.txt")

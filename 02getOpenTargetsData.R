@@ -6,12 +6,12 @@ library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 
 # options
-## permissive
-#min.drugs.score <- -Inf
-#min.degs.score <- -Inf
-# strict
-min.drugs.score <- 0.5
-min.degs.score <- 0.2
+# permissive
+min.drugs.score <- -Inf
+min.degs.score <- -Inf
+## strict
+#min.drugs.score <- 0.5
+#min.degs.score <- 0.2
 
 # read STOPGAP data to get EFO IDs for diseases
 stopgap <- fread("../dat/stopgap.tsv")
