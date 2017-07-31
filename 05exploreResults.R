@@ -17,7 +17,7 @@ genes.numbers <- fisher.genes[same.disease == TRUE & therapeutic.area %in% relev
 # plot
 png("../dat/fisher.genes.ta.barplot.png", res = 150, width = 9 * 150, height = 6 * 150)
 print(ggplot(genes.numbers, aes(x = reorder(therapeutic.area, -number), y = number)) +
-      geom_bar(stat = "identity", colour = "black", fill = "dodgerblue1") +
+      geom_bar(stat = "identity", colour = "black", fill = "#0066ff") +
       xlab("Therapeutic area") +
       ylab("Number of significant diseases") +
       theme_bw(18) +
@@ -32,7 +32,7 @@ drugs.numbers <- fisher.drugs[existing.indication == TRUE & therapeutic.area %in
 # plot
 png("../dat/fisher.drugs.ta.barplot.png", res = 150, width = 9 * 150, height = 6 * 150)
 print(ggplot(drugs.numbers, aes(x = reorder(therapeutic.area, -number), y = number)) +
-      geom_bar(stat = "identity", colour = "black", fill = "darkorange1") +
+      geom_bar(stat = "identity", colour = "black", fill = "#ff6600") +
       xlab("Therapeutic area") +
       ylab("Number of significant diseases") +
       theme_bw(18) +

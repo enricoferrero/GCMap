@@ -64,17 +64,31 @@ fisher.genes[, p.adjusted := p.adjust(p.value, method = "fdr")]
 # add dummy variable
 fisher.genes[, same.disease := ifelse(efo.id.opentargets.degs == efo.id.stopgap, TRUE, FALSE)]
 
-# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+## test if distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+# adjusted p-values
 mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, -log10(p.adjusted)], y = fisher.genes[same.disease == TRUE, -log10(p.adjusted)])
 print(mw.res)
 print(mw.res$p.value)
-# plot adjusted p-value distributions
-png("../dat/fisher.genes.boxplots.png", width = 8 * 150, height = 6 * 150, res = 150)
+png("../dat/fisher.genes.pvalues.boxplots.png", width = 6 * 150, height = 6 * 150, res = 150)
 print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
-    geom_boxplot(outlier.shape = NA) +
-    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.05, 0.95))) +
+    geom_boxplot(fill = "#0066ff", outlier.shape = NA) +
+    coord_cartesian(ylim = quantile(fisher.genes[, -log10(p.adjusted)], c(0.03, 0.97))) +
     xlab("Same disease") +
     ylab("-log10(adjusted p-value)") +
+    theme_bw(18) +
+    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
+    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+dev.off()
+# odds ratios
+mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, odds.ratio], y = fisher.genes[same.disease == TRUE, odds.ratio]) 
+print(mw.res)
+print(mw.res$p.value)
+png("../dat/fisher.genes.oddsratios.boxplots.png", width = 6 * 150, height = 6 * 150, res = 150)
+print(ggplot(fisher.genes, aes(x = same.disease, y = odds.ratio)) +
+    geom_boxplot(fill = "#0066ff", outlier.shape = NA) +
+    coord_cartesian(ylim = quantile(fisher.genes[, odds.ratio], c(0.06, 0.94))) +
+    xlab("Same disease") +
+    ylab("Odds ratio") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
     ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
@@ -88,18 +102,23 @@ pred.obj <- prediction(predictions = preds, labels = labls)
 roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.genes.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
+par(pty = "s")
+plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR
 pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
 png("../dat/fisher.genes.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(pr.res, xlab = "Recall", ylab = "Precision", col = "dodgerblue4", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex = 1.5, pty = "s")
+par(pty = "s")
+plot(pr.res, xlab = "Recall", ylab = "Precision", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 
-# export
+## export
+# master file
 fwrite(fisher.genes, "../dat/fisher.genes.tsv", sep = "\t")
+# tables
+fwrite(fisher.genes[same.disease == TRUE & p.adjusted < 0.05, ], "../doc/TableS1.csv", sep = ",")
 
 
 ### question 2: are genes differentially expressed after treatment with drug for disease X enriched for genes genetically associated with disease X, compared to other diseases?
@@ -133,17 +152,31 @@ fisher.drugs[p.value == 0, p.value := 3e-324]
 fisher.drugs <- fisher.drugs[order(p.value), ]
 fisher.drugs[, p.adjusted := p.adjust(p.value, method = "fdr")]
 
-# test if adjusted p-value  distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+## test if distributions significantly different with Mann-Whitney test (Wilcoxon rank sum test)
+# adjusted p-values
 mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, -log10(p.adjusted)], y = fisher.drugs[existing.indication == TRUE, -log10(p.adjusted)])
 print(mw.res)
 print(mw.res$p.value)
-# plot adjusted p-value distributions
-png("../dat/fisher.drugs.boxplots.png", width = 8 * 150, height = 6 * 150, res = 150)
+png("../dat/fisher.drugs.pvalues.boxplots.png", width = 6 * 150, height = 6 * 150, res = 150)
 print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted))) +
-    geom_boxplot(outlier.shape = NA) +
+    geom_boxplot(fill = "#ff6600", outlier.shape = NA) +
     coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.06, 0.94))) +
-    xlab("Existing indication") +
+    xlab("existing.indication") +
     ylab("-log10(adjusted p-value)") +
+    theme_bw(18) +
+    scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
+    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+dev.off()
+# odds ratios
+mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, odds.ratio], y = fisher.drugs[existing.indication == TRUE, odds.ratio]) 
+print(mw.res)
+print(mw.res$p.value)
+png("../dat/fisher.drugs.oddsratios.boxplots.png", width = 6 * 150, height = 6 * 150, res = 150)
+print(ggplot(fisher.drugs, aes(x = existing.indication, y = odds.ratio)) +
+    geom_boxplot(fill = "#ff6600", outlier.shape = NA) +
+    coord_cartesian(ylim = quantile(fisher.drugs[, odds.ratio], c(0.04, 0.96))) +
+    xlab("Existing indication") +
+    ylab("Odds ratio") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
     ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
@@ -157,15 +190,21 @@ pred.obj <- prediction(predictions = preds, labels = labls)
 roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.drugs.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "firebrick", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
+par(pty = "s")
+plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR
 pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
 png("../dat/fisher.drugs.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-plot(pr.res, xlab = "Recall", ylab = "Precision", col = "dodgerblue4", lwd = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5, pty = "s")
+par(pty = "s")
+plot(pr.res, xlab = "Recall", ylab = "Precision", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 
-# export
+## export
+# master file
 fwrite(fisher.drugs, "../dat/fisher.drugs.tsv", sep = "\t")
+# tables
+fwrite(fisher.drugs[existing.indication == TRUE & p.adjusted < 0.05, ], "../doc/TableS2.csv", sep = ",")
+fwrite(fisher.drugs[existing.indication == FALSE & p.adjusted < 1e-10, ], "../doc/TableS3.csv", sep = ",")
