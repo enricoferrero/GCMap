@@ -77,7 +77,7 @@ print(ggplot(fisher.genes, aes(x = same.disease, y = -log10(p.adjusted))) +
     ylab("-log10(adjusted p-value)") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
-    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+    ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 # odds ratios
 mw.res <- wilcox.test(x = fisher.genes[same.disease == FALSE, odds.ratio], y = fisher.genes[same.disease == TRUE, odds.ratio]) 
@@ -91,7 +91,7 @@ print(ggplot(fisher.genes, aes(x = same.disease, y = odds.ratio)) +
     ylab("Odds ratio") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
-    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+    ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
 # perform ROC/PR analysis
@@ -103,7 +103,7 @@ roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.genes.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 par(pty = "s")
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
+plot(roc.res, main = paste("AUC =", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR
@@ -161,11 +161,11 @@ png("../dat/fisher.drugs.pvalues.boxplots.png", width = 6 * 150, height = 6 * 15
 print(ggplot(fisher.drugs, aes(x = existing.indication, y = -log10(p.adjusted))) +
     geom_boxplot(fill = "#ff6600", outlier.shape = NA) +
     coord_cartesian(ylim = quantile(fisher.drugs[, -log10(p.adjusted)], c(0.06, 0.94))) +
-    xlab("existing.indication") +
+    xlab("Existing indication") +
     ylab("-log10(adjusted p-value)") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
-    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+    ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 # odds ratios
 mw.res <- wilcox.test(x = fisher.drugs[existing.indication == FALSE, odds.ratio], y = fisher.drugs[existing.indication == TRUE, odds.ratio]) 
@@ -179,7 +179,7 @@ print(ggplot(fisher.drugs, aes(x = existing.indication, y = odds.ratio)) +
     ylab("Odds ratio") +
     theme_bw(18) +
     scale_x_discrete(breaks = c(FALSE, TRUE), labels = c("No", "Yes")) +
-    ggtitle(paste("p =", sprintf("%.2e", mw.res$p.value))))
+    ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
 # perform ROC/PR analysis
@@ -191,7 +191,7 @@ roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
 auc.res <- performance(pred.obj, measure = "auc")
 png("../dat/fisher.drugs.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 par(pty = "s")
-plot(roc.res, main = paste("AUC:", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
+plot(roc.res, main = paste("AUC =", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
 abline(a = 0, b = 1, lty = 2, col = "grey50")
 dev.off()
 # PR

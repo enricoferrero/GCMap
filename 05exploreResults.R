@@ -53,7 +53,7 @@ nodes <- data.table(ID = c(paste(relevant.tas, 1), paste(relevant.tas, 2)), x = 
 # create riverplot object
 sankey <- makeRiver(as.data.frame(nodes), as.data.frame(edges))
 png("../dat/fisher.drugs.repositioning.sankeyplot.png", res = 300, width = 12 * 300, height = 25 * 300)
-plot(sankey, srt = "0", textcex = 1.25)
+plot(sankey, srt = "0", textcex = 1.4)
 dev.off()
 
 ## explore trajectories
