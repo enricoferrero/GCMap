@@ -1,15 +1,12 @@
 library(EnsDb.Hsapiens.v75)
 library(data.table)
-library(httr)
-library(jsonlite)
 library(foreach)
 library(doParallel)
 registerDoParallel(parallel::detectCores() - 1)
 library(BiocParallel)
 register(MulticoreParam(workers = 1))
-library(fgsea)
 library(ggplot2)
-library(ROCR)
+library(pROC)
 
 # function to calculate enrichment
 checkOverlapSignificance <- function(set1, set2, universe) {
@@ -94,30 +91,25 @@ print(ggplot(fisher.genes, aes(x = same.disease, y = odds.ratio)) +
     ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
-# perform ROC/PR analysis
+# perform ROC analysis
 preds <- fisher.genes[, -log10(p.adjusted)]
 labls <- as.numeric(fisher.genes[, same.disease])
-pred.obj <- prediction(predictions = preds, labels = labls)
-# ROC
-roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
-auc.res <- performance(pred.obj, measure = "auc")
+roc.res <- roc(response = labls, predictor = preds, algorithm = 2, ci = TRUE, ci.method = "bootstrap", boot.n = 1000, parallel = TRUE, progress = "none")
+print(roc.res)
+sp.ci <- ci.sp(roc.res, sensitivities = seq(0, 1, 0.05), boot.n = 1000, parallel = TRUE, progress = "none")
+se.ci <- ci.se(roc.res, specifities = seq(0, 1, 0.05), boot.n = 1000, parallel = TRUE, progress = "none")
 png("../dat/fisher.genes.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 par(pty = "s")
-plot(roc.res, main = paste("AUC =", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
-dev.off()
-# PR
-pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
-png("../dat/fisher.genes.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-par(pty = "s")
-plot(pr.res, xlab = "Recall", ylab = "Precision", col = "#0066ff", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex = 1.5)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
+plot(roc.res, main = paste("AUC =", round(roc.res$auc, 2)), xlab = "False positive rate", ylab = "True positive rate", identity.lty = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
+plot(se.ci, type = "shape", col = "lightgrey", border = NA, no.roc = TRUE)
+plot(sp.ci, type = "shape", col = "lightgrey", border = NA, no.roc = TRUE)
+plot(roc.res, add = TRUE, col = "#0066ff", lwd = 3)
 dev.off()
 
 ## export
 # master file
 fwrite(fisher.genes, "../dat/fisher.genes.tsv", sep = "\t")
-# tables
+# table
 fwrite(fisher.genes[same.disease == TRUE & p.adjusted < 0.05, ], "../doc/TableS1.csv", sep = ",")
 
 
@@ -182,24 +174,19 @@ print(ggplot(fisher.drugs, aes(x = existing.indication, y = odds.ratio)) +
     ggtitle(paste("p-value =", sprintf("%.2e", mw.res$p.value))))
 dev.off()
 
-# perform ROC/PR analysis
+# perform ROC analysis
 preds <- fisher.drugs[, -log10(p.adjusted)]
 labls <- as.numeric(fisher.drugs[, existing.indication])
-pred.obj <- prediction(predictions = preds, labels = labls)
-# ROC
-roc.res <- performance(pred.obj, measure = "tpr", x.measure = "fpr")
-auc.res <- performance(pred.obj, measure = "auc")
+roc.res <- roc(response = labls, predictor = preds, algorithm = 2, ci = TRUE, ci.method = "bootstrap", boot.n = 1000, parallel = TRUE, progress = "none")
+print(roc.res)
+sp.ci <- ci.sp(roc.res, sensitivities = seq(0, 1, 0.05), boot.n = 1000, parallel = TRUE, progress = "none")
+se.ci <- ci.se(roc.res, specifities = seq(0, 1, 0.05), boot.n = 1000, parallel = TRUE, progress = "none")
 png("../dat/fisher.drugs.roc.png", width = 6 * 150, height = 6 * 150, res = 150)
 par(pty = "s")
-plot(roc.res, main = paste("AUC =", round(auc.res@y.values[[1]], 3)), xlab = "False positive rate", ylab = "True positive rate", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
-dev.off()
-# PR
-pr.res <- performance(pred.obj, measure = "prec", x.measure = "rec")
-png("../dat/fisher.drugs.pr.png", width = 6 * 150, height = 6 * 150, res = 150)
-par(pty = "s")
-plot(pr.res, xlab = "Recall", ylab = "Precision", col = "#ff6600", lwd = 3, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
-abline(a = 0, b = 1, lty = 2, col = "grey50")
+plot(roc.res, main = paste("AUC =", round(roc.res$auc, 2)), xlab = "False positive rate", ylab = "True positive rate", identity.lty = 2, cex.axis = 1.5, cex.lab = 1.5, cex.main = 1.5, cex = 1.5)
+plot(se.ci, type = "shape", col = "lightgrey", border = NA, no.roc = TRUE)
+plot(sp.ci, type = "shape", col = "lightgrey", border = NA, no.roc = TRUE)
+plot(roc.res, add = TRUE, col = "#ff6600", lwd = 3)
 dev.off()
 
 ## export

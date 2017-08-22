@@ -47,12 +47,12 @@ targets <- unique(fisher.drugs[therapeutic.area %in% relevant.tas & existing.ind
 # merge
 drugs.repos <- merge(sources, targets, by = "chembl.id", all = FALSE, allow.cartesian = TRUE)
 # edges
-edges <- drugs.repos[, .(Value = .N), by = .(N1 = paste(from.ta, 1), N2 = paste(to.ta, 2))]
+edges <- drugs.repos[, .(Value = .N^2), by = .(N1 = paste(from.ta, 1), N2 = paste(to.ta, 2))]
 # nodes
 nodes <- data.table(ID = c(paste(relevant.tas, 1), paste(relevant.tas, 2)), x = c(rep(1, length(relevant.tas)), rep(2, length(relevant.tas))), labels = rep(relevant.tas, 2), col = rep(brewer.pal(length(relevant.tas), "Set3"), 2))
 # create riverplot object
 sankey <- makeRiver(as.data.frame(nodes), as.data.frame(edges))
-png("../dat/fisher.drugs.repositioning.sankeyplot.png", res = 300, width = 12 * 300, height = 25 * 300)
+png("../dat/fisher.drugs.repositioning.sankeyplot.png", res = 600, width = 12 * 600, height = 30 * 600)
 plot(sankey, srt = "0", textcex = 1.4)
 dev.off()
 
