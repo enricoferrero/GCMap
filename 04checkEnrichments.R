@@ -21,10 +21,10 @@ checkOverlapSignificance <- function(set1, set2, universe) {
 }
 
 # read datasets
-stopgap <- fread("../dat/stopgap.tsv")
-opentargets.drugs <- fread("../dat/opentargets.drugs.tsv")
-opentargets.degs <- fread("../dat/opentargets.degs.tsv")
-harmonizome <- fread("../dat/harmonizome.tsv")
+stopgap <- unique(fread("../dat/stopgap.tsv"))
+opentargets.drugs <- unique(fread("../dat/opentargets.drugs.tsv"))
+opentargets.degs <- unique(fread("../dat/opentargets.degs.tsv"))
+harmonizome <- unique(fread("../dat/harmonizome.tsv"))
 
 # split by disease
 stopgap.list <- split(stopgap, stopgap$efo.id)
